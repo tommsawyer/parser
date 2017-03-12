@@ -8,8 +8,17 @@ DBHelper.connect()
   .then((helper) => {
     dbHelper = helper;
   })
-  .then(() => parsers[0].run())
+  .then(() => {
+    let parseActions = parsers.map((parser) => {
+        return parser.run();
+    });
+    return Promise.all(parseActions);
+  })
   .then(items => {
+    items = items.reduce((items, set) => {
+      return items.concat(set);
+    }, []);
+    
     let modifyActions = items.map((item) => {
       return dbHelper.updateItem(item.type, item);
     })
