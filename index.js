@@ -1,18 +1,32 @@
 const parsers = require('./lib/parsers');
 const mongoClient = require('mongodb').MongoClient;
+const DBHelper = require('./lib/helpers/db.js');
 
-let database = null;
+let dbHelper = null;
 
-mongoClient.connect('mongodb://localhost:27017/ivanovofood')
-  .then((DB) => {
-    database = DB;
-    return database.collection('pizzas').drop();
+DBHelper.connect()
+  .then((helper) => {
+    dbHelper = helper;
   })
-  .then(() => parsers[0].parse())
-  .then(pizzas => {
-    return database.collection('pizzas').insertMany(pizzas);
+  .then(() => parsers[0].run())
+  .then(items => {
+    let modifyActions = items.map((item) => {
+      return dbHelper.updateItem(item.type, item);
+    })
+
+    return Promise.all(modifyActions);
+  })
+  .then((updates) => {
+    updatedIds = updates.map((update) => {
+      return update.value ? update.value._id : update.lastErrorObject.upserted
+    });
+
+    return dbHelper.removeItems(updatedIds);
   })
   .then(() => {
     console.log('Database has been updated!')
-    database.close();
+    dbHelper.closeConnection();
+  })
+  .catch((err) => {
+    console.log(err);
   });
