@@ -12,6 +12,7 @@
   "dependencies": {
     "cheerio": "^0.22.0",
     "mongodb": "^2.2.24",
+    "progress": "^1.1.8",
     "request": "^2.81.0"
   }
 }
