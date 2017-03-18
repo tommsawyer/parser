@@ -1,8 +1,8 @@
-const parsers = require('./lib/parsers');
+const parsers     = require('./lib/parsers');
 const mongoClient = require('mongodb').MongoClient;
-const DBHelper = require('./lib/helpers/db.js');
+const DBHelper    = require('./lib/helpers/db.js');
 const ProgressBar = require('progress');
-const utils = require('./lib/helpers/utils.js');
+const utils       = require('./lib/helpers/utils.js');
 
 let dbHelper = null;
 
@@ -17,19 +17,16 @@ DBHelper.connect()
   })
   .then(items => {
     items = utils.flattenFirstLevel(items);
-    
     let modifyActions = items.map(item => dbHelper.updateItem(item.type, item));
 
     return Promise.all(modifyActions);
   })
-  .then((updates) => {
+  .then(updates => {
     let updatedIds = updates.map(update => dbHelper.getUpdatedItemId(update));
-    return dbHelper.removeItems(updatedIds);
+    return dbHelper.removeUnmodifiedItems(updatedIds);
   })
   .then(() => {
     console.log('Database has been updated!')
     dbHelper.closeConnection();
   })
-  .catch((err) => {
-    console.error(err);
-  });
+  .catch(console.error);
